@@ -22,10 +22,14 @@ NUM_CLASSES = 40
 
 
 
-def get_logits(batch_size, num_classes, bRandom):
+def get_logits(batch_size, num_classes, bRandom, i_seed=None):
 
     if bRandom:
-        logits = np.random.normal(0.0, 10, size=(batch_size, num_classes))
+        if i_seed:
+            seed = np.random.RandomState(i_seed)
+            logits = seed.normal(0.0, 10, size=(batch_size, num_classes))
+        else:
+            logits = np.random.normal(0.0, 10, size=(batch_size, num_classes))
     else:
         logits = 1.0 / num_classes * np.ones((batch_size, num_classes))
 
@@ -34,10 +38,14 @@ def get_logits(batch_size, num_classes, bRandom):
 
 
 
-def get_labels(batch_size, num_classes):
+def get_labels(batch_size, num_classes, i_seed=None):
     labels_sparse = np.zeros([batch_size, num_classes])
     for id_batch in xrange(batch_size):
-        label_hot = np.random.randint(low=0, high=num_classes)
+        if i_seed:
+            seed = np.random.RandomState(i_seed)
+            label_hot = seed.randint(low=0, high=num_classes)
+        else:
+            label_hot = np.random.randint(low=0, high=num_classes)
         labels_sparse[id_batch, label_hot] = 1.0
 
     return labels_sparse
@@ -56,8 +64,8 @@ loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=labels_spar
 init = tf.global_variables_initializer()
 sess = tf.Session()
 sess.run(init) # reset values to wrong
-logits_this = get_logits(BATCH_SIZE, NUM_CLASSES, True)
-labels_this = get_labels(BATCH_SIZE, NUM_CLASSES)
+logits_this = get_logits(BATCH_SIZE, NUM_CLASSES, True, 0)
+labels_this = get_labels(BATCH_SIZE, NUM_CLASSES, 0)
 feed_dict = {logits:logits_this, labels_sparse: labels_this}
 loss_ = sess.run(loss, feed_dict=feed_dict)
 

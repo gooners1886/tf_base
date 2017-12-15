@@ -30,14 +30,29 @@ def my_softmax(logits):
     return probs
 
 
-def gen_label(batch_size, num_classes):
+def get_label(batch_size, num_classes, i_seed=None):
     labels_sparse = np.zeros([batch_size, num_classes])
     for id_batch in xrange(batch_size):
-        label_hot = np.random.randint(low=0, high=num_classes)
+        if i_seed:
+            seed = np.random.RandomState(i_seed)
+            label_hot = seed.randint(low=0, high=num_classes)
+        else:
+            label_hot = np.random.randint(low=0, high=num_classes)
         labels_sparse[id_batch, label_hot] = 1.0
 
     return labels_sparse
 
+def get_logits(batch_size, num_classes, bRandom, i_seed=None):
+    if bRandom:
+        if i_seed:
+            seed = np.random.RandomState(i_seed)
+            logits = seed.normal(0.0, 10, size=(batch_size, num_classes))
+        else:
+            logits = np.random.normal(0.0, 10, size=(batch_size, num_classes))
+    else:
+        logits = 1.0 / num_classes * np.ones((batch_size, num_classes))
+
+    return logits
 
 def cal_single_loss(prob, label_sparse):
     sum = np.sum(label_sparse * np.log(prob))
@@ -62,15 +77,12 @@ def my_loss(probs, labels_sparse, batch_size):
     print ("\nloss_avg = {}".format(loss_avg))
 
 
-def average_loss(batch_size, num_classes, bRandom):
-    if bRandom:
-        logits = np.random.normal(0.0, 10, size=(batch_size, num_classes))
-    else:
-        logits = 1.0 / num_classes * np.ones((batch_size, num_classes))
+def average_loss(batch_size, num_classes):
 
+    logits = get_logits(batch_size, num_classes, True, 1)
     probs = my_softmax(logits)
 
-    labels_sparse = gen_label(batch_size, num_classes)
+    labels_sparse = get_label(batch_size, num_classes, 2)
 
     loss = my_loss(probs, labels_sparse, batch_size)
 
@@ -81,9 +93,9 @@ def main(argv):
     batch_size = 4
     num_classes = 40
 
-    bRandom = True
 
-    average_loss(batch_size, num_classes, bRandom)
+
+    average_loss(batch_size, num_classes)
 
 
 if __name__ == '__main__':
